@@ -65,10 +65,17 @@ export async function rebaseOnto(
     git: SimpleGit,
     {oldRef, newRef}: {oldRef: string; newRef: string},
 ): Promise<void> {
-    log.bold(`> git rebase --onto ${newRef} ${oldRef}`);
-    await git.rebase([
-        '--onto',
-        newRef,
-        oldRef,
-    ]);
+    try {
+        log.bold(`> git rebase --onto ${newRef} ${oldRef}`);
+        await git.rebase([
+            '--onto',
+            newRef,
+            oldRef,
+        ]);
+    } catch (error) {
+        console.error(
+            `'git rebase' failed.\nResolve conflicts like normal (using 'git rebase --continue') and then run 'git-vir push' to resume.`,
+        );
+        throw error;
+    }
 }
