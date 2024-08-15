@@ -20,7 +20,7 @@ Use this instead of `git push` when you have a chain of several PRs that are tar
 2. Make the necessary changes to that branch (rebase, commit amend, etc.).
 3. Run `git-vir push`.
     - If you use a remote name besides `origin`, you can provide that as well with `git-vir <remote-name-here> push`.
-    - If you encounter merge conflicts, resolve  them as you would for a normal `git rebase` command. Then, run `git-vir push` to resume updating the chain.
+    - If you encounter merge conflicts, resolve them as you would for a normal `git rebase` command. Then, run `git-vir push` to resume updating the chain.
 4. Don't do anything else in the repo's directory until the command is finished.
     - The git-vir command will checkout and push all dependent branches, recursively.
     - If you do anything with the repo while this is happening, it'll likely break this process, including pushing changes to incorrect branches.
