@@ -1,5 +1,6 @@
 import {log} from '@augment-vir/node-js';
 import {SimpleGit} from 'simple-git';
+import {LoggedError} from '../cli/logged.error.js';
 
 /** Get the current branch name. */
 export async function getCurrentBranchName(git: SimpleGit): Promise<string | undefined> {
@@ -15,7 +16,7 @@ export async function getCurrentBranchName(git: SimpleGit): Promise<string | und
 
 /** Force push the current branch. */
 export async function forcePush(git: SimpleGit): Promise<void> {
-    log.bold('> git push --force-with-lease');
+    log.faint('> git push --force-with-lease');
     await git.push([
         '--force-with-lease',
     ]);
@@ -66,16 +67,16 @@ export async function rebaseOnto(
     {oldRef, newRef}: {oldRef: string; newRef: string},
 ): Promise<void> {
     try {
-        log.bold(`> git rebase --onto ${newRef} ${oldRef}`);
+        log.faint(`> git rebase --onto ${newRef} ${oldRef}`);
         await git.rebase([
             '--onto',
             newRef,
             oldRef,
         ]);
-    } catch (error) {
+    } catch {
         console.error(
             `'git rebase' failed.\nResolve conflicts like normal (using 'git rebase --continue') and then run 'git-vir push' to resume.`,
         );
-        throw error;
+        throw new LoggedError();
     }
 }

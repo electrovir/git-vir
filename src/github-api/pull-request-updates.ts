@@ -70,7 +70,7 @@ export async function updateStackedPullRequest({
                   },
         );
         await forcePush(git);
-        log.success(`${childBranchName} updated.`);
+        log.faint(`${childBranchName} updated.`);
 
         updatedChildCount += await updateStackedPullRequest({
             git,

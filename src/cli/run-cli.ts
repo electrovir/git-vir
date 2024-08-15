@@ -4,6 +4,7 @@ import {extractRelevantArgs} from 'cli-args-vir';
 import simpleGit from 'simple-git';
 import {CommandInputs} from './command-inputs.js';
 import {GitVirCommandName, gitVirCommandFunctionMap} from './commands-map.js';
+import {LoggedError} from './logged.error.js';
 
 /**
  * Inputs required for the CLI to execute. When the CLI is run directly, these are automatically
@@ -31,9 +32,12 @@ export async function runCli({command, cwd, remoteName, otherArgs}: CliInput) {
     try {
         await commandFunction(commandInputs);
     } catch (caught) {
-        console.error(caught);
-        log.error(`${command} failed.`);
-        throw ensureError(caught);
+        const error = ensureError(caught);
+        if (!(error instanceof LoggedError)) {
+            console.error(error);
+            log.error(`${command} failed.`);
+        }
+        throw error;
     }
 }
 
