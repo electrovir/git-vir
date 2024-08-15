@@ -1,9 +1,11 @@
 import {awaitedForEach} from '@augment-vir/common';
 import {log, runShellCommand} from '@augment-vir/node-js';
 import {SimpleGit} from 'simple-git';
+import {LoggedError} from '../cli/logged.error.js';
 import {
     checkout,
     doesBranchExistLocally,
+    doesLocalBranchMatchRemote,
     fetchBranch,
     forcePush,
     rebaseOnto,
@@ -44,9 +46,18 @@ export async function updateStackedPullRequest({
     await awaitedForEach(childPullRequests, async (childPullRequest) => {
         const childBranchName = childPullRequest.headRefName;
         log.info(`Updating ${childBranchName}...`);
-        if (!(await doesBranchExistLocally(git, childBranchName))) {
-            log.faint(`${childBranchName} does not exist locally. Fetching from ${remoteName}...`);
-            await fetchBranch(git, {branchName: childBranchName, remoteName});
+        await fetchBranch(git, {branchName: childBranchName, remoteName});
+        if (
+            (await doesBranchExistLocally(
+                git,
+                childBranchName,
+            )) /** Verify that local branch matches remote branch, or abort. */ &&
+            !(await doesLocalBranchMatchRemote(git, childBranchName, remoteName))
+        ) {
+            log.error(
+                `Cannot update branch '${childBranchName}'.\nLocal branch does not match remote branch on '${remoteName}'.`,
+            );
+            throw new LoggedError();
         }
 
         if (isPostMerge) {

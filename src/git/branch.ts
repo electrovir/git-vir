@@ -1,3 +1,4 @@
+import {isTruthy} from '@augment-vir/common';
 import {log} from '@augment-vir/node-js';
 import {SimpleGit} from 'simple-git';
 import {LoggedError} from '../cli/logged.error.js';
@@ -44,6 +45,33 @@ export async function fetchBranch(
 ): Promise<void> {
     log.faint(`> git fetch ${remoteName} ${branchName}`);
     await git.fetch(remoteName, branchName);
+}
+
+async function getBranchCommit(
+    git: Readonly<SimpleGit>,
+    branchName: string,
+    remote?: string | undefined,
+): Promise<string> {
+    const ref = [
+        remote,
+        branchName,
+    ]
+        .filter(isTruthy)
+        .join('/');
+
+    return (await git.revparse(ref)).trim();
+}
+
+/** Checks if the local copy of a branch matches its remote copy. */
+export async function doesLocalBranchMatchRemote(
+    git: Readonly<SimpleGit>,
+    branchName: string,
+    remote: string,
+) {
+    const localCommit = await getBranchCommit(git, branchName);
+    const remoteCommit = await getBranchCommit(git, branchName, remote);
+
+    return localCommit === remoteCommit;
 }
 
 /**
