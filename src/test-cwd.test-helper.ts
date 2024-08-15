@@ -1,6 +1,6 @@
 import {readFileIfExists} from '@augment-vir/node-js';
-import {join} from 'path';
-import {notCommittedDir} from './repo-paths';
+import {join} from 'node:path';
+import {notCommittedDir} from './repo-paths.js';
 
 export async function loadTestCwd(): Promise<string | undefined> {
     return await readFileIfExists(join(notCommittedDir, 'test-cwd.txt'));

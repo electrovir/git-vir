@@ -1,8 +1,13 @@
-import {join, resolve} from 'path';
+import {baseTypedocConfig} from '@virmator/docs/configs/typedoc.config.base';
+import {join, resolve} from 'node:path';
 import type {TypeDocOptions} from 'typedoc';
-import {baseTypedocConfig} from 'virmator/dist/compiled-base-configs/base-typedoc';
 
-const repoRoot = resolve(__dirname, '..');
+const repoRoot = resolve(
+    __dirname,
+    /** Go up two directories because this gets compiled into `node_modules/.virmator` */
+    '..',
+    '..',
+);
 const indexTsFile = join(repoRoot, 'src', 'index.ts');
 
 export const typeDocConfig: Partial<TypeDocOptions> = {
@@ -12,4 +17,9 @@ export const typeDocConfig: Partial<TypeDocOptions> = {
         indexTsFile,
     ],
     intentionallyNotExported: [],
+    defaultCategory: 'MISSING CATEGORY',
+    categoryOrder: [
+        'Main',
+        'Internal',
+    ],
 };

@@ -1,8 +1,14 @@
 import {awaitedForEach} from '@augment-vir/common';
 import {log, runShellCommand} from '@augment-vir/node-js';
 import {SimpleGit} from 'simple-git';
-import {checkout, doesBranchExistLocally, fetchBranch, forcePush, rebaseOnto} from '../git/branch';
-import {PullRequest} from './pull-request-data';
+import {
+    checkout,
+    doesBranchExistLocally,
+    fetchBranch,
+    forcePush,
+    rebaseOnto,
+} from '../git/branch.js';
+import {PullRequest} from './pull-request-data.js';
 
 export async function updateStackedPullRequest({
     git,

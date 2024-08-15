@@ -1,6 +1,6 @@
-import {CommandInputs} from './command-inputs';
-import {mergeCommand} from './commands/merge.command';
-import {pushCommand} from './commands/push.command';
+import {CommandInputs} from './command-inputs.js';
+import {mergeCommand} from './commands/merge.command.js';
+import {pushCommand} from './commands/push.command.js';
 
 /** Available git-vir command names. To be used as the first argument to the git-vir command. */
 export enum GitVirCommandName {

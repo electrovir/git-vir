@@ -1,11 +1,11 @@
 import {log} from '@augment-vir/node-js';
-import {checkout} from '../../git/branch';
-import {getCurrentBranchPullRequest} from '../../github-api/pull-request-data';
+import {checkout} from '../../git/branch.js';
+import {getCurrentBranchPullRequest} from '../../github-api/pull-request-data.js';
 import {
     mergeCurrentPullRequest,
     updateStackedPullRequest,
-} from '../../github-api/pull-request-updates';
-import {CommandInputs} from '../command-inputs';
+} from '../../github-api/pull-request-updates.js';
+import {CommandInputs} from '../command-inputs.js';
 
 /** Perform the git-vir push command. */
 export async function mergeCommand({

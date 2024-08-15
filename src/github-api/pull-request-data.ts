@@ -1,8 +1,8 @@
-import {parseJson} from '@augment-vir/common';
 import {runShellCommand} from '@augment-vir/node-js';
 import {defineShape, exact} from 'object-shape-tester';
 import {SimpleGit} from 'simple-git';
-import {getCurrentBranchName} from '../git/branch';
+import {parseJsonWithShape} from '../augments/json.js';
+import {getCurrentBranchName} from '../git/branch.js';
 
 /** Shape for pull request data retrieved from GitHub. */
 export const pullRequestShape = defineShape(
@@ -48,12 +48,7 @@ export async function getPullRequestByNumber(
         throw new Error(`Failed to find PR '${prNumber}' from GitHub.`);
     }
 
-    const parsedPullRequest = parseJson({
-        jsonString: commandResult.stdout,
-        shapeMatcher: pullRequestShape.defaultValue,
-    });
-
-    return parsedPullRequest;
+    return parseJsonWithShape(commandResult.stdout, pullRequestShape);
 }
 
 /** Get all current pull requests from GitHub from the cwd's git repo. */
@@ -72,12 +67,7 @@ export async function listOpenPullRequests(
         throw new Error('Failed to list PRs from GitHub.');
     }
 
-    const pullRequests = parseJson({
-        jsonString: commandResult.stdout,
-        shapeMatcher: pullRequestArrayShape.defaultValue,
-    });
-
-    return pullRequests;
+    return parseJsonWithShape(commandResult.stdout, pullRequestArrayShape);
 }
 
 /** Gets a currently open pull request from GitHub that is using the current git branch. */
