@@ -42,11 +42,11 @@ export async function runCli({command, cwd, remoteName, otherArgs}: CliInput) {
 }
 
 /** Extracts arguments from a raw string of CLI args. */
-export function extractArgs(rawArgs: ReadonlyArray<string>): CliInput {
+export function extractArgs(rawArgs: ReadonlyArray<string>, cliFilePath: string): CliInput {
     const relevantArgs = extractRelevantArgs({
         rawArgs,
         binName: 'git-vir',
-        fileName: import.meta.filename,
+        fileName: cliFilePath,
     }).reverse();
 
     const commandIndex = relevantArgs.findIndex((arg) => isEnumValue(arg, GitVirCommandName));
