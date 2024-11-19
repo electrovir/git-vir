@@ -1,4 +1,4 @@
-import {log} from '@augment-vir/node-js';
+import {log} from '@augment-vir/common';
 import {checkout, forcePush} from '../../git/branch.js';
 import {getCurrentBranchPullRequest} from '../../github-api/pull-request-data.js';
 import {updateStackedPullRequest} from '../../github-api/pull-request-updates.js';

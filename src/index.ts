@@ -1,4 +1,4 @@
-export * from './cli/cli.js';
+export * from './cli/cli.script.js';
 export * from './cli/command-inputs.js';
 export * from './cli/commands-map.js';
 export * from './cli/commands/push.command.js';

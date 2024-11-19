@@ -1,4 +1,4 @@
-import {readFileIfExists} from '@augment-vir/node-js';
+import {readFileIfExists} from '@augment-vir/node';
 import {join} from 'node:path';
 import {notCommittedDir} from './repo-paths.js';
 

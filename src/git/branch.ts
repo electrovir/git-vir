@@ -1,5 +1,5 @@
-import {isTruthy} from '@augment-vir/common';
-import {log} from '@augment-vir/node-js';
+import {check} from '@augment-vir/assert';
+import {log} from '@augment-vir/common';
 import {SimpleGit} from 'simple-git';
 import {LoggedError} from '../cli/logged.error.js';
 
@@ -56,7 +56,7 @@ async function getBranchCommit(
         remote,
         branchName,
     ]
-        .filter(isTruthy)
+        .filter(check.isTruthy)
         .join('/');
 
     return (await git.revparse(ref)).trim();
@@ -102,7 +102,7 @@ export async function rebaseOnto(
             oldRef,
         ]);
     } catch {
-        console.error(
+        log.error(
             `'git rebase' failed.\nResolve conflicts like normal (using 'git rebase --continue') and then run 'git-vir push' to resume.`,
         );
         throw new LoggedError();

@@ -1,5 +1,5 @@
-import {awaitedForEach} from '@augment-vir/common';
-import {log, runShellCommand} from '@augment-vir/node-js';
+import {awaitedForEach, log} from '@augment-vir/common';
+import {runShellCommand} from '@augment-vir/node';
 import {SimpleGit} from 'simple-git';
 import {LoggedError} from '../cli/logged.error.js';
 import {

@@ -1,5 +1,5 @@
-import assert from 'node:assert/strict';
-import {describe, it} from 'node:test';
+import {assert} from '@augment-vir/assert';
+import {describe, it} from '@augment-vir/test';
 import {loadTestCwd} from '../test-cwd.test-helper.js';
 import {listOpenPullRequests} from './pull-request-data.js';
 
@@ -10,7 +10,7 @@ describe(listOpenPullRequests.name, () => {
 
         if (testCwd) {
             console.info(output);
-            assert(output.length > 1);
+            assert.isLengthAtLeast(output, 1);
         }
     });
 });

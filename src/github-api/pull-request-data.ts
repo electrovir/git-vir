@@ -1,7 +1,6 @@
-import {runShellCommand} from '@augment-vir/node-js';
-import {defineShape, exact} from 'object-shape-tester';
+import {runShellCommand} from '@augment-vir/node';
+import {defineShape, exact, parseJsonWithShape} from 'object-shape-tester';
 import {SimpleGit} from 'simple-git';
-import {parseJsonWithShape} from '../augments/json.js';
 import {getCurrentBranchName} from '../git/branch.js';
 
 /** Shape for pull request data retrieved from GitHub. */
@@ -26,7 +25,7 @@ export const pullRequestShape = defineShape(
 );
 
 /** A pull request from GitHub. */
-export type PullRequest = typeof pullRequestShape.runTimeType;
+export type PullRequest = typeof pullRequestShape.runtimeType;
 
 const pullRequestArrayShape = defineShape([pullRequestShape], true);
 

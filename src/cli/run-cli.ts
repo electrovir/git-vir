@@ -1,6 +1,6 @@
-import {ensureError, getEnumTypedValues, isEnumValue} from '@augment-vir/common';
-import {log} from '@augment-vir/node-js';
-import {extractRelevantArgs} from 'cli-args-vir';
+import {check} from '@augment-vir/assert';
+import {ensureError, getEnumValues, log} from '@augment-vir/common';
+import {extractRelevantArgs} from '@augment-vir/node';
 import simpleGit from 'simple-git';
 import {CommandInputs} from './command-inputs.js';
 import {GitVirCommandName, gitVirCommandFunctionMap} from './commands-map.js';
@@ -49,7 +49,7 @@ export function extractArgs(rawArgs: ReadonlyArray<string>, cliFilePath: string)
         fileName: cliFilePath,
     }).reverse();
 
-    const commandIndex = relevantArgs.findIndex((arg) => isEnumValue(arg, GitVirCommandName));
+    const commandIndex = relevantArgs.findIndex((arg) => check.isEnumValue(arg, GitVirCommandName));
 
     const command = relevantArgs[commandIndex];
 
@@ -57,9 +57,9 @@ export function extractArgs(rawArgs: ReadonlyArray<string>, cliFilePath: string)
 
     const otherArgs = relevantArgs.slice(0, commandIndex);
 
-    if (!isEnumValue(command, GitVirCommandName)) {
+    if (!check.isEnumValue(command, GitVirCommandName)) {
         throw new Error(
-            `Invalid command given. Expected one of:\n    ${getEnumTypedValues(GitVirCommandName).join('\n    ')}`,
+            `Invalid command given. Expected one of:\n    ${getEnumValues(GitVirCommandName).join('\n    ')}`,
         );
     }
     return {

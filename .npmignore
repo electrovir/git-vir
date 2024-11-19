@@ -1,12 +1,11 @@
 .*
 .not-committed/
-*.book-helper.*
 *.book.*
 *.d.ts.map
-*.test-helper.*
+*.example.*
+*.mock.*
 *.test.*
 *.tgz
-**/*/readme-examples/
 **/*/test/
 /configs/
 /coverage/

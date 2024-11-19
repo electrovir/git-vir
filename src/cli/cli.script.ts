@@ -1,5 +1,3 @@
-#!/usr/bin/env -S npx tsx
-
 import {fileURLToPath} from 'node:url';
 import {extractArgs, runCli} from './run-cli.js';
 
