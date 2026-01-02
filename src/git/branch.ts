@@ -25,9 +25,10 @@ export async function forcePush(git: SimpleGit): Promise<void> {
 
 /** Checkout a new branch locally. Does not fetch the branch from the remote. */
 export async function checkout(git: SimpleGit, branchName: string): Promise<void> {
-    log.faint(`> git checkout ${branchName}`);
+    log.faint(`> git checkout  --ignore-other-worktrees ${branchName}`);
     await git.raw([
         'checkout',
+        '--ignore-other-worktrees',
         branchName,
     ]);
 }
