@@ -1,4 +1,4 @@
-import {SimpleGit} from 'simple-git';
+import {type SimpleGit} from 'simple-git';
 
 /** Inputs that each git-vir command requires. */
 export type CommandInputs = {

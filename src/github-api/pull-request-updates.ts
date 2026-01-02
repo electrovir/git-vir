@@ -1,6 +1,6 @@
 import {awaitedForEach, log} from '@augment-vir/common';
 import {runShellCommand} from '@augment-vir/node';
-import {SimpleGit} from 'simple-git';
+import {type SimpleGit} from 'simple-git';
 import {LoggedError} from '../cli/logged.error.js';
 import {
     checkout,
@@ -10,7 +10,7 @@ import {
     forcePush,
     rebaseOnto,
 } from '../git/branch.js';
-import {PullRequest} from './pull-request-data.js';
+import {type PullRequest} from './pull-request-data.js';
 
 export async function updateStackedPullRequest({
     git,

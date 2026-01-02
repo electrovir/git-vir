@@ -5,7 +5,7 @@ import {
     mergeCurrentPullRequest,
     updateStackedPullRequest,
 } from '../../github-api/pull-request-updates.js';
-import {CommandInputs} from '../command-inputs.js';
+import {type CommandInputs} from '../command-inputs.js';
 
 /** Perform the git-vir push command. */
 export async function mergeCommand({

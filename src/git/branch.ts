@@ -1,6 +1,6 @@
 import {check} from '@augment-vir/assert';
 import {log} from '@augment-vir/common';
-import {SimpleGit} from 'simple-git';
+import {type SimpleGit} from 'simple-git';
 import {LoggedError} from '../cli/logged.error.js';
 
 /** Get the current branch name. */

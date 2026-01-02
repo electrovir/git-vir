@@ -1,35 +1,32 @@
 import {runShellCommand} from '@augment-vir/node';
-import {defineShape, exact, parseJsonWithShape} from 'object-shape-tester';
-import {SimpleGit} from 'simple-git';
+import {defineShape, exactShape, parseJsonWithShape} from 'object-shape-tester';
+import {type SimpleGit} from 'simple-git';
 import {getCurrentBranchName} from '../git/branch.js';
 
 /** Shape for pull request data retrieved from GitHub. */
-export const pullRequestShape = defineShape(
-    {
-        /** The name of the branch that the pull request is merging into. */
-        baseRefName: '',
-        /** The name of the branch that is getting merged into another branch. */
-        headRefName: '',
-        /** Hidden ID string for the pull request. */
-        id: '',
-        title: '',
-        isDraft: false,
-        /** Issue / pull request number. */
-        number: 0,
-        /** SHA of the HEAD commit of the pull request. */
-        headRefOid: '',
-        state: exact('OPEN'),
-        url: '',
-    },
-    true,
-);
+export const pullRequestShape = defineShape({
+    /** The name of the branch that the pull request is merging into. */
+    baseRefName: '',
+    /** The name of the branch that is getting merged into another branch. */
+    headRefName: '',
+    /** Hidden ID string for the pull request. */
+    id: '',
+    title: '',
+    isDraft: false,
+    /** Issue / pull request number. */
+    number: 0,
+    /** SHA of the HEAD commit of the pull request. */
+    headRefOid: '',
+    state: exactShape('OPEN'),
+    url: '',
+});
 
 /** A pull request from GitHub. */
 export type PullRequest = typeof pullRequestShape.runtimeType;
 
-const pullRequestArrayShape = defineShape([pullRequestShape], true);
+const pullRequestArrayShape = defineShape([pullRequestShape]);
 
-const githubJsonPropertiesToList = Object.keys(pullRequestShape.defaultValue);
+const githubJsonPropertiesToList = Object.keys(pullRequestShape.default);
 
 /** Finds a pull request on GitHub by its PR name. If no PR is found, an error is thrown. */
 export async function getPullRequestByNumber(

@@ -1,4 +1,4 @@
-import {CommandInputs} from './command-inputs.js';
+import {type CommandInputs} from './command-inputs.js';
 import {mergeCommand} from './commands/merge.command.js';
 import {pushCommand} from './commands/push.command.js';
 

@@ -2,7 +2,7 @@ import {log} from '@augment-vir/common';
 import {checkout, forcePush} from '../../git/branch.js';
 import {getCurrentBranchPullRequest} from '../../github-api/pull-request-data.js';
 import {updateStackedPullRequest} from '../../github-api/pull-request-updates.js';
-import {CommandInputs} from '../command-inputs.js';
+import {type CommandInputs} from '../command-inputs.js';
 
 /** Perform the git-vir push command. */
 export async function pushCommand({cwd, git, remoteName}: CommandInputs): Promise<void> {
