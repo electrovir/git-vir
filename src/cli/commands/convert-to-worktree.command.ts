@@ -1,12 +1,26 @@
-import {check} from '@augment-vir/assert';
 import {log} from '@augment-vir/common';
 import {runShellCommand} from '@augment-vir/node';
-import {cp, mkdir, mkdtemp, rename, rm, stat} from 'node:fs/promises';
+import {existsSync} from 'node:fs';
+import {cp, mkdir, mkdtemp, rename, rm, stat, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {basename, join} from 'node:path';
 import {getCurrentBranchName} from '../../git/branch.js';
 import {type CommandInputs} from '../command-inputs.js';
 import {LoggedError} from '../logged.error.js';
+
+async function movePathWithFallback(source: string, destination: string): Promise<void> {
+    try {
+        await rename(source, destination);
+    } catch {
+        /** Falls back to copy + remove when rename fails (e.g. cross-filesystem). */
+        await cp(source, destination, {
+            recursive: true,
+        });
+        await rm(source, {
+            recursive: true,
+        });
+    }
+}
 
 /** Perform the git-vir convert-to-worktree command. */
 export async function convertToWorktreeCommand({
@@ -26,77 +40,29 @@ export async function convertToWorktreeCommand({
         throw new LoggedError();
     }
 
-    /** Step 3: Check for unstaged changes, uncommitted changes, unpushed commits/branches. */
-    const statusResult = await git.status();
-
-    const unstagedFiles = statusResult.files.filter(
-        (file) => file.working_dir !== ' ' && file.working_dir !== '?',
-    );
-    const stagedFiles = statusResult.files.filter(
-        (file) => file.index !== ' ' && file.index !== '?',
-    );
-
-    const branchTrackingOutput = (
+    /** Step 3: Check if the repo has existing worktrees attached. */
+    const worktreeListOutput = (
         await git.raw([
-            'for-each-ref',
-            '--format=%(refname:short)|%(upstream:short)|%(upstream:trackshort)',
-            'refs/heads/',
+            'worktree',
+            'list',
+            '--porcelain',
         ])
     ).trim();
+    const worktreeCount = worktreeListOutput
+        .split('\n')
+        .filter((line) => line.startsWith('worktree ')).length;
 
-    const issues = [
-        ...(unstagedFiles.length
-            ? [
-                  `Unstaged changes: ${unstagedFiles.map((file) => file.path).join(', ')}`,
-              ]
-            : []),
-        ...(stagedFiles.length
-            ? [
-                  `Uncommitted staged changes: ${stagedFiles.map((file) => file.path).join(', ')}`,
-              ]
-            : []),
-        ...branchTrackingOutput
-            .split('\n')
-            .filter(check.isTruthy)
-            .flatMap((line) => {
-                const parts = line.split('|');
-
-                if (!parts[1]) {
-                    return [
-                        `Unpushed branch: ${parts[0]}`,
-                    ];
-                } else if (parts[2]?.includes('>')) {
-                    return [
-                        `Unpushed commits on branch: ${parts[0]}`,
-                    ];
-                }
-                return [];
-            }),
-    ];
-
-    if (issues.length) {
-        issues.forEach((issue) => log.error(issue));
-        log.error('Resolve the above issues before converting to a worktree.');
+    if (worktreeCount > 1) {
+        log.error(
+            'This repo has other worktrees attached. Remove them with `git worktree remove` before converting.',
+        );
         throw new LoggedError();
     }
 
-    /** Gather info needed after the move. */
     const currentBranchName = await getCurrentBranchName(git);
 
     if (!currentBranchName) {
         log.error('Could not determine the current branch.');
-        throw new LoggedError();
-    }
-
-    const remoteUrl = (
-        await git.remote([
-            'get-url',
-            remoteName,
-        ])
-    )?.trim();
-
-    if (!remoteUrl) {
-        log.error(`Could not get URL for remote '${remoteName}'.`);
         throw new LoggedError();
     }
 
@@ -107,56 +73,69 @@ export async function convertToWorktreeCommand({
 
     /** Step 5: Move the repo into the temp directory. */
     log.faint(`Moving repo to ${tempRepoPath}`);
-    try {
-        await rename(repoRoot, tempRepoPath);
-    } catch {
-        /** Falls back to copy + remove when rename fails (e.g. cross-filesystem). */
-        await cp(repoRoot, tempRepoPath, {
-            recursive: true,
-        });
-        await rm(repoRoot, {
-            recursive: true,
-        });
-    }
+    await movePathWithFallback(repoRoot, tempRepoPath);
 
     /** Step 6: Recreate the original folder. */
     await mkdir(repoRoot);
 
-    /** Step 7: Clone bare repo. */
-    log.faint(`Cloning bare repo from ${remoteUrl}`);
-    await runShellCommand(`git clone --bare --filter=blob:none '${remoteUrl}'`, {
-        cwd: repoRoot,
+    /** Step 7: Move the existing .git directory to become the bare repo. */
+    const bareRepoDir = join(repoRoot, `${basename(repoRoot)}.git`);
+    log.faint(`Converting .git to bare repo at ${bareRepoDir}`);
+    await movePathWithFallback(join(tempRepoPath, '.git'), bareRepoDir);
+
+    /** Step 8: Configure the bare repo. */
+    log.faint('Configuring bare repo...');
+    await runShellCommand('git config core.bare true', {
+        cwd: bareRepoDir,
         hookUpToConsole: true,
         rejectOnError: true,
     });
-
-    /** Step 8-9: Configure the bare repo. */
-    const bareRepoDir = join(repoRoot, `${basename(remoteUrl, '.git')}.git`);
-    log.faint('Configuring bare repo...');
     await runShellCommand('git config fetch.prune true', {
         cwd: bareRepoDir,
         hookUpToConsole: true,
         rejectOnError: true,
     });
-    await runShellCommand("git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'", {
-        cwd: bareRepoDir,
-        hookUpToConsole: true,
-        rejectOnError: true,
-    });
+    await runShellCommand(
+        `git config remote.${remoteName}.fetch '+refs/heads/*:refs/remotes/${remoteName}/*'`,
+        {
+            cwd: bareRepoDir,
+            hookUpToConsole: true,
+            rejectOnError: true,
+        },
+    );
 
-    /** Step 10: Create branch folder next to the bare repo. */
+    /** Step 9: Create branch folder and copy working files. */
     const branchDir = join(repoRoot, currentBranchName);
     await mkdir(branchDir, {
         recursive: true,
     });
 
-    /** Step 11: Copy working files from temp repo, excluding .git. */
     log.faint(`Copying working files to ${branchDir}`);
-    const gitDirInTemp = join(tempRepoPath, '.git');
     await cp(tempRepoPath, branchDir, {
         recursive: true,
-        filter: (source) => source !== gitDirInTemp,
     });
+
+    /** Step 10: Set up worktree metadata so the branch folder is a registered git worktree. */
+    const worktreeMetaDir = join(bareRepoDir, 'worktrees', currentBranchName);
+    await mkdir(worktreeMetaDir, {
+        recursive: true,
+    });
+
+    const originalIndex = join(bareRepoDir, 'index');
+
+    if (existsSync(originalIndex)) {
+        /** Move the index to preserve staged changes. */
+        await movePathWithFallback(originalIndex, join(worktreeMetaDir, 'index'));
+    }
+
+    /** Write HEAD for the worktree. */
+    await writeFile(join(worktreeMetaDir, 'HEAD'), `ref: refs/heads/${currentBranchName}\n`);
+
+    /** Write gitdir pointing from the worktree metadata back to the working directory. */
+    await writeFile(join(worktreeMetaDir, 'gitdir'), `${branchDir}/.git\n`);
+
+    /** Write .git file in the branch directory pointing to the worktree metadata. */
+    await writeFile(join(branchDir, '.git'), `gitdir: ${worktreeMetaDir}\n`);
 
     log.info(`Converted to worktree layout at ${repoRoot}`);
     log.info(`  Bare repo:        ${bareRepoDir}`);

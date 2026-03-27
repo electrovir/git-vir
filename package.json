@@ -1,6 +1,6 @@
 {
     "name": "git-vir",
-    "version": "2.0.5",
+    "version": "2.1.0",
     "description": "CLI tool for making life with git and GitHub easier.",
     "keywords": [
         "cli",
@@ -56,7 +56,7 @@
         "@types/node": "^25.5.0",
         "@typescript-eslint/eslint-plugin": "^8.57.2",
         "cspell": "^9.7.0",
-        "dependency-cruiser": "^17.3.5",
+        "dependency-cruiser": "^17.3.8",
         "esbuild": "^0.27.4",
         "eslint": "9.39.2",
         "eslint-config-prettier": "^10.1.8",

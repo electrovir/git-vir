@@ -1,7 +1,7 @@
 import {check} from '@augment-vir/assert';
 import {ensureError, getEnumValues, log} from '@augment-vir/common';
 import {extractRelevantArgs} from '@augment-vir/node';
-import simpleGit from 'simple-git';
+import {simpleGit} from 'simple-git';
 import {type CommandInputs} from './command-inputs.js';
 import {GitVirCommandName, gitVirCommandFunctionMap} from './commands-map.js';
 import {LoggedError} from './logged.error.js';
