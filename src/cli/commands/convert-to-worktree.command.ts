@@ -65,8 +65,7 @@ export async function convertToWorktreeCommand({
                     return [
                         `Unpushed branch: ${parts[0]}`,
                     ];
-                }
-                if (parts[2]?.includes('>')) {
+                } else if (parts[2]?.includes('>')) {
                     return [
                         `Unpushed commits on branch: ${parts[0]}`,
                     ];
@@ -147,7 +146,9 @@ export async function convertToWorktreeCommand({
 
     /** Step 10: Create branch folder next to the bare repo. */
     const branchDir = join(repoRoot, currentBranchName);
-    await mkdir(branchDir, {recursive: true});
+    await mkdir(branchDir, {
+        recursive: true,
+    });
 
     /** Step 11: Copy working files from temp repo, excluding .git. */
     log.faint(`Copying working files to ${branchDir}`);

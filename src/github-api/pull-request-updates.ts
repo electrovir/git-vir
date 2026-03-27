@@ -46,7 +46,10 @@ export async function updateStackedPullRequest({
     await awaitedForEach(childPullRequests, async (childPullRequest) => {
         const childBranchName = childPullRequest.headRefName;
         log.info(`Updating ${childBranchName}...`);
-        await fetchBranch(git, {branchName: childBranchName, remoteName});
+        await fetchBranch(git, {
+            branchName: childBranchName,
+            remoteName,
+        });
         if (
             (await doesBranchExistLocally(
                 git,
@@ -61,7 +64,10 @@ export async function updateStackedPullRequest({
         }
 
         if (isPostMerge) {
-            await fetchBranch(git, {branchName: parentPullRequest.baseRefName, remoteName});
+            await fetchBranch(git, {
+                branchName: parentPullRequest.baseRefName,
+                remoteName,
+            });
         }
 
         await checkout(git, childPullRequest.headRefName);

@@ -24,7 +24,11 @@ export async function mergeCommand({
     }
 
     log.faint(`Merging PR #${currentPullRequest.number}...`);
-    await mergeCurrentPullRequest({cwd, pullRequestUrl: currentPullRequest.url, otherArgs});
+    await mergeCurrentPullRequest({
+        cwd,
+        pullRequestUrl: currentPullRequest.url,
+        otherArgs,
+    });
 
     log.faint('Starting stacked diff update.');
     log.mutate('Do not run any git commands or modify any files.');
