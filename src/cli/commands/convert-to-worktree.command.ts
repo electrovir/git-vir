@@ -1,88 +1,22 @@
 import {log} from '@augment-vir/common';
 import {runShellCommand} from '@augment-vir/node';
 import {existsSync} from 'node:fs';
-import {
-    cp,
-    mkdir,
-    mkdtemp,
-    readdir,
-    readlink,
-    rename,
-    rm,
-    stat,
-    symlink,
-    writeFile,
-} from 'node:fs/promises';
+import {cp, mkdir, mkdtemp, rename, rm, stat, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
-import {basename, isAbsolute, join, relative} from 'node:path';
+import {basename, join} from 'node:path';
 import {getCurrentBranchName} from '../../git/branch.js';
 import {type CommandInputs} from '../command-inputs.js';
 import {LoggedError} from '../logged.error.js';
-
-/**
- * Collects all relative symlinks in a directory tree so they can be restored after a copy
- * operation. Node.js `fs.cp()` converts relative symlink targets to absolute paths, which breaks
- * symlinks that are meant to be repository-relative.
- */
-async function collectRelativeSymlinks(
-    dir: string,
-): Promise<ReadonlyArray<{readonly relativePath: string; readonly target: string}>> {
-    const entries = await readdir(dir, {
-        withFileTypes: true,
-        recursive: true,
-    });
-
-    const results = await Promise.all(
-        entries.map(async (entry) => {
-            if (!entry.isSymbolicLink()) {
-                return undefined;
-            }
-            const fullPath = join(entry.parentPath, entry.name);
-            const target = await readlink(fullPath);
-
-            if (isAbsolute(target)) {
-                return undefined;
-            }
-
-            return {
-                relativePath: relative(dir, fullPath),
-                target,
-            };
-        }),
-    );
-
-    return results.filter((result) => result != undefined);
-}
-
-async function restoreRelativeSymlinks(
-    dir: string,
-    symlinks: ReadonlyArray<{readonly relativePath: string; readonly target: string}>,
-): Promise<void> {
-    await Promise.all(
-        symlinks.map(async ({relativePath, target}) => {
-            const fullPath = join(dir, relativePath);
-            await rm(fullPath, {
-                force: true,
-            });
-            await symlink(target, fullPath);
-        }),
-    );
-}
-
-async function cpPreservingRelativeSymlinks(source: string, destination: string): Promise<void> {
-    const relativeSymlinks = await collectRelativeSymlinks(source);
-    await cp(source, destination, {
-        recursive: true,
-    });
-    await restoreRelativeSymlinks(destination, relativeSymlinks);
-}
 
 async function movePathWithFallback(source: string, destination: string): Promise<void> {
     try {
         await rename(source, destination);
     } catch {
         /** Falls back to copy + remove when rename fails (e.g. cross-filesystem). */
-        await cpPreservingRelativeSymlinks(source, destination);
+        await cp(source, destination, {
+            recursive: true,
+            verbatimSymlinks: true,
+        });
         await rm(source, {
             recursive: true,
         });
@@ -178,7 +112,10 @@ export async function convertToWorktreeCommand({
     });
 
     log.faint(`Copying working files to ${branchDir}`);
-    await cpPreservingRelativeSymlinks(tempRepoPath, branchDir);
+    await cp(tempRepoPath, branchDir, {
+        recursive: true,
+        verbatimSymlinks: true,
+    });
 
     /** Step 10: Set up worktree metadata so the branch folder is a registered git worktree. */
     const worktreeMetaDir = join(bareRepoDir, 'worktrees', currentBranchName);
