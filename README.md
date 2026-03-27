@@ -34,3 +34,38 @@ Make sure to include a merge type: `--squash`, `--rebase`, or `--merge`. Like th
 ```sh
 git-vir merge --squash
 ```
+
+If you use a remote name besides `origin`, you can provide that as well with `git-vir <remote-name-here> merge --squash`.
+
+## Convert to Worktree
+
+Converts a standard git repository into a [git worktree](https://git-scm.com/docs/git-worktree) layout with a bare repository and a branch-specific working directory.
+
+```sh
+git-vir convert-to-worktree
+```
+
+This is useful when you want to work on multiple branches simultaneously in separate directories without having to stash or commit in-progress work.
+
+### What it does
+
+Given a repo at `~/repos/my-repo` on branch `main`, running `git-vir convert-to-worktree` produces:
+
+```
+~/repos/my-repo/
+├── my-repo.git/    # bare repository
+└── main/           # working tree for the current branch
+```
+
+A backup copy of the original repo is saved to a temp directory (printed during execution).
+
+After conversion, add new worktrees with standard git commands from within any existing worktree:
+
+```sh
+git worktree add ../new-branch
+```
+
+### Restrictions
+
+- The repo must not already be a worktree.
+- The repo must not have any other worktrees attached. Remove them first with `git worktree remove`.
