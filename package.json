@@ -1,6 +1,6 @@
 {
     "name": "git-vir",
-    "version": "2.1.4",
+    "version": "2.1.5",
     "description": "CLI tool for making life with git and GitHub easier.",
     "keywords": [
         "cli",

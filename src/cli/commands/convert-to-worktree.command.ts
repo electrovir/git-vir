@@ -30,7 +30,7 @@ export async function convertToWorktreeCommand({
 }: Readonly<CommandInputs>): Promise<void> {
     /** Step 1: Find the git repo root. */
     const repoRoot = (await git.revparse(['--show-toplevel'])).trim();
-    log.info(`Repo root: ${repoRoot}`);
+    log.faint(`Repo root: ${repoRoot}`);
 
     /** Step 2: Check if already a worktree. */
     const gitPath = join(repoRoot, '.git');
@@ -142,8 +142,10 @@ export async function convertToWorktreeCommand({
     /** Write .git file in the branch directory pointing to the worktree metadata. */
     await writeFile(join(branchDir, '.git'), `gitdir: ${worktreeMetaDir}\n`);
 
-    log.info(`Converted to worktree layout at ${repoRoot}`);
-    log.info(`  Bare repo:        ${bareRepoDir}`);
-    log.info(`  Working tree:     ${branchDir}`);
-    log.info(`  Copy of original: ${tempRepoPath}`);
+    log.faint(`Converted to worktree layout at ${repoRoot}`);
+    log.faint(`  Bare repo:        ${bareRepoDir}`);
+    log.faint(`  Working tree:     ${branchDir}`);
+    log.faint(`  Copy of original: ${tempRepoPath}`);
+
+    log.info(`\n\ncd to your new worktree at: ${branchDir}\n\n`);
 }
