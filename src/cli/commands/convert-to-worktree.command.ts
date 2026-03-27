@@ -128,6 +128,9 @@ export async function convertToWorktreeCommand({
         await movePathWithFallback(originalIndex, join(worktreeMetaDir, 'index'));
     }
 
+    /** Write commondir so git can find the shared bare repo objects/refs. */
+    await writeFile(join(worktreeMetaDir, 'commondir'), '../..\n');
+
     /** Write HEAD for the worktree. */
     await writeFile(join(worktreeMetaDir, 'HEAD'), `ref: refs/heads/${currentBranchName}\n`);
 
