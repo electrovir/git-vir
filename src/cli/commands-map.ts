@@ -1,4 +1,5 @@
 import {type CommandInputs} from './command-inputs.js';
+import {convertToWorktreeCommand} from './commands/convert-to-worktree.command.js';
 import {mergeCommand} from './commands/merge.command.js';
 import {pushCommand} from './commands/push.command.js';
 
@@ -6,6 +7,7 @@ import {pushCommand} from './commands/push.command.js';
 export enum GitVirCommandName {
     Push = 'push',
     Merge = 'merge',
+    ConvertToWorktree = 'convert-to-worktree',
 }
 
 /** All command functions match this type. */
@@ -15,4 +17,5 @@ export type CommandFunction = (inputs: CommandInputs) => Promise<void>;
 export const gitVirCommandFunctionMap: Readonly<Record<GitVirCommandName, CommandFunction>> = {
     [GitVirCommandName.Push]: pushCommand,
     [GitVirCommandName.Merge]: mergeCommand,
+    [GitVirCommandName.ConvertToWorktree]: convertToWorktreeCommand,
 };
