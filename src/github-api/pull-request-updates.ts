@@ -55,7 +55,11 @@ export async function updateStackedPullRequest({
                 git,
                 childBranchName,
             )) /** Verify that local branch matches remote branch, or abort. */ &&
-            !(await doesLocalBranchMatchRemote(git, childBranchName, remoteName))
+            !(await doesLocalBranchMatchRemote({
+                git,
+                branchName: childBranchName,
+                remote: remoteName,
+            }))
         ) {
             log.error(
                 `Cannot update branch '${childBranchName}'.\nLocal branch does not match remote branch on '${remoteName}'.`,

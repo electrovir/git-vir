@@ -8,7 +8,10 @@ import {getCurrentBranchName} from '../../git/branch.js';
 import {type CommandInputs} from '../command-inputs.js';
 import {LoggedError} from '../logged.error.js';
 
-async function movePathWithFallback(source: string, destination: string): Promise<void> {
+async function movePathWithFallback({
+    source,
+    destination,
+}: Readonly<{source: string; destination: string}>): Promise<void> {
     try {
         await rename(source, destination);
     } catch {
@@ -74,7 +77,10 @@ export async function convertToWorktreeCommand({
 
     /** Step 5: Move the repo into the temp directory. */
     log.faint(`Moving repo to ${tempRepoPath}`);
-    await movePathWithFallback(repoRoot, tempRepoPath);
+    await movePathWithFallback({
+        source: repoRoot,
+        destination: tempRepoPath,
+    });
 
     /** Step 6: Recreate the original folder. */
     await mkdir(repoRoot);
@@ -82,7 +88,10 @@ export async function convertToWorktreeCommand({
     /** Step 7: Move the existing .git directory to become the bare repo. */
     const bareRepoDir = join(repoRoot, `${basename(repoRoot)}.git`);
     log.faint(`Converting .git to bare repo at ${bareRepoDir}`);
-    await movePathWithFallback(join(tempRepoPath, '.git'), bareRepoDir);
+    await movePathWithFallback({
+        source: join(tempRepoPath, '.git'),
+        destination: bareRepoDir,
+    });
 
     /** Step 8: Configure the bare repo. */
     log.faint('Configuring bare repo...');
@@ -127,7 +136,10 @@ export async function convertToWorktreeCommand({
 
     if (existsSync(originalIndex)) {
         /** Move the index to preserve staged changes. */
-        await movePathWithFallback(originalIndex, join(worktreeMetaDir, 'index'));
+        await movePathWithFallback({
+            source: originalIndex,
+            destination: join(worktreeMetaDir, 'index'),
+        });
     }
 
     /** Write commondir so git can find the shared bare repo objects/refs. */

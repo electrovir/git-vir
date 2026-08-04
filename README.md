@@ -67,5 +67,5 @@ git worktree add ../new-branch
 
 ### Restrictions
 
-- The repo must not already be a worktree.
-- The repo must not have any other worktrees attached. Remove them first with `git worktree remove`.
+-   The repo must not already be a worktree.
+-   The repo must not have any other worktrees attached. Remove them first with `git worktree remove`.

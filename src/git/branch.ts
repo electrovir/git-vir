@@ -64,11 +64,11 @@ async function getBranchCommit(
 }
 
 /** Checks if the local copy of a branch matches its remote copy. */
-export async function doesLocalBranchMatchRemote(
-    git: Readonly<SimpleGit>,
-    branchName: string,
-    remote: string,
-) {
+export async function doesLocalBranchMatchRemote({
+    git,
+    branchName,
+    remote,
+}: Readonly<{git: Readonly<SimpleGit>; branchName: string; remote: string}>) {
     const localCommit = await getBranchCommit(git, branchName);
     const remoteCommit = await getBranchCommit(git, branchName, remote);
 
@@ -104,7 +104,7 @@ export async function rebaseOnto(
         ]);
     } catch {
         log.error(
-            `'git rebase' failed.\nResolve conflicts like normal (using 'git rebase --continue') and then run 'git-vir push' to resume.`,
+            "'git rebase' failed.\nResolve conflicts like normal (using 'git rebase --continue') and then run 'git-vir push' to resume.",
         );
         throw new LoggedError();
     }
