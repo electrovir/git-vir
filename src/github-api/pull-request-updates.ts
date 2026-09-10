@@ -10,18 +10,19 @@ import {
     forcePush,
     rebaseOnto,
 } from '../git/branch.js';
-import {type PullRequest} from './pull-request-data.js';
+import {listOpenPullRequestsWithBase, type PullRequest} from './pull-request-data.js';
 
 export async function updateStackedPullRequest({
+    cwd,
     git,
     parentPullRequest,
-    pullRequests,
     remoteName,
     isPostMerge,
 }: {
+    /** The repo directory to use the GitHub CLI from within. */
+    cwd: string;
     git: SimpleGit;
     parentPullRequest: Readonly<PullRequest>;
-    pullRequests: ReadonlyArray<Readonly<PullRequest>>;
     remoteName: string;
     /**
      * Set to true only if the parent pull request has just been merged (rather than just been
@@ -32,9 +33,16 @@ export async function updateStackedPullRequest({
 }): Promise<number> {
     const originalParentRef = parentPullRequest.headRefOid;
 
-    const childPullRequests = pullRequests.filter(
-        (pullRequest) => pullRequest.baseRefName === parentPullRequest.headRefName,
-    );
+    /**
+     * Query the children directly rather than filtering a list of all open pull requests: the query
+     * is exact no matter how many pull requests the repo has. This must happen _before_ any of the
+     * children get rebased below so that each child's `headRefOid` is still its pre-rebase value
+     * (which is what its own children need to rebase off of).
+     */
+    const childPullRequests = await listOpenPullRequestsWithBase({
+        cwd,
+        baseRefName: parentPullRequest.headRefName,
+    });
     if (!childPullRequests.length) {
         return 0;
     }
@@ -94,8 +102,8 @@ export async function updateStackedPullRequest({
         log.faint(`${childBranchName} updated.`);
 
         updatedChildCount += await updateStackedPullRequest({
+            cwd,
             git,
-            pullRequests,
             parentPullRequest: childPullRequest,
             remoteName,
             /** Only the first update should ever use the base ref. Recursive calls never will. */
