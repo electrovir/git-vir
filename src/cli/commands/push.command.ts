@@ -6,8 +6,7 @@ import {type CommandInputs} from '../command-inputs.js';
 
 /** Perform the git-vir push command. */
 export async function pushCommand({cwd, git, remoteName}: CommandInputs): Promise<void> {
-    const {currentPullRequest, openPullRequests, currentBranchName} =
-        await getCurrentBranchPullRequest(cwd, git);
+    const {currentPullRequest, currentBranchName} = await getCurrentBranchPullRequest(cwd, git);
 
     if (!currentPullRequest) {
         log.info(
@@ -23,8 +22,8 @@ export async function pushCommand({cwd, git, remoteName}: CommandInputs): Promis
     log.mutate('Do not run any git commands or modify any files.');
 
     await updateStackedPullRequest({
+        cwd,
         git,
-        pullRequests: openPullRequests,
         parentPullRequest: currentPullRequest,
         remoteName,
         isPostMerge: false,
