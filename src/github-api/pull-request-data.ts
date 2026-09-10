@@ -47,33 +47,19 @@ export async function getPullRequestByNumber(
     return parseJsonWithShape(commandResult.stdout, pullRequestShape);
 }
 
-/** Ends the current single quoted section, emits an escaped `'`, and starts a new quoted section. */
+/** Closes the current quote, emits an escaped `'`, then reopens the quote. */
 const escapedSingleQuote = String.raw`'\''`;
 
-/**
- * Wrap a value in single quotes so that the shell treats it as a single literal argument. Git
- * branch names are allowed to contain plenty of characters that the shell would otherwise interpret
- * (such as `$`, `&`, `;`, and `|`), so any branch name that gets interpolated into a shell command
- * must go through this first.
- */
+/** Quote a value for the shell. Branch names may contain `$`, `&`, `;`, and other shell syntax. */
 export function escapeShellArgument(value: string): string {
     return `'${value.replaceAll("'", escapedSingleQuote)}'`;
 }
 
-/**
- * The maximum number of pull requests that will be fetched by a single `gh pr list` call. `gh pr
- * list` defaults to a limit of just 30, which silently truncates its output on any repo that has
- * more open pull requests than that, so an explicit (much higher) limit is always passed. Hitting
- * even this limit is treated as an error rather than as a complete list: see
- * {@link listPullRequests}.
- */
+/** Explicit `--limit` for `gh pr list`, which otherwise caps its output at 30. */
 export const maxPullRequestListLength = 1000;
 
-/** Build the `gh pr list` command used by all of this file's list functions. */
-export function createPullRequestListCommand(
-    /** Extra filter arguments to append to the `gh pr list` command. */
-    filterArgs: ReadonlyArray<string> = [],
-): string {
+/** Build the `gh pr list` command shared by the list functions below. */
+export function createPullRequestListCommand(filterArgs: ReadonlyArray<string> = []): string {
     return [
         'gh pr list',
         '--state open',
@@ -83,26 +69,20 @@ export function createPullRequestListCommand(
     ].join(' ');
 }
 
-/**
- * `gh pr list` gives no indication that it truncated its output, so a full page of results cannot
- * be distinguished from a truncated one. Refuse to treat such a list as complete rather than
- * silently operating on partial data.
- */
+/** Throws if the list may be truncated. `gh` gives no truncation signal of its own. */
 export function assertCompletePullRequestList(
     pullRequests: ReadonlyArray<Readonly<PullRequest>>,
 ): void {
     if (pullRequests.length >= maxPullRequestListLength) {
         throw new Error(
-            `Got ${pullRequests.length} PRs from GitHub, which hits the max list length of ${maxPullRequestListLength}. The list of PRs may be truncated so it cannot be trusted.`,
+            `Hit the max PR list length (${maxPullRequestListLength}). The PR list may be truncated.`,
         );
     }
 }
 
-/** Run `gh pr list` with the given extra filter arguments and parse the output. */
+/** Filter args must already be escaped. */
 async function listPullRequests(
-    /** The repo directory to use the GitHub CLI from within. */
     cwd: string,
-    /** Extra, already-escaped arguments to append to the `gh pr list` command. */
     filterArgs: ReadonlyArray<string>,
 ): Promise<ReadonlyArray<Readonly<PullRequest>>> {
     const commandResult = await runShellCommand(createPullRequestListCommand(filterArgs), {
@@ -120,13 +100,7 @@ async function listPullRequests(
     return pullRequests;
 }
 
-/**
- * Get all currently open pull requests from GitHub from the cwd's git repo.
- *
- * Prefer the filtered {@link listOpenPullRequestsWithHead} and {@link listOpenPullRequestsWithBase}
- * when only a specific branch's pull requests are needed: they're exact and cheap no matter how
- * large the repo is.
- */
+/** Get all current pull requests from GitHub from the cwd's git repo. */
 export async function listOpenPullRequests(
     /** The repo directory to use the GitHub CLI from within. */
     cwd: string,
@@ -134,7 +108,7 @@ export async function listOpenPullRequests(
     return await listPullRequests(cwd, []);
 }
 
-/** Get all currently open pull requests from GitHub whose _head_ branch is the given branch. */
+/** Get open pull requests from GitHub with the given head branch. */
 export async function listOpenPullRequestsWithHead({
     cwd,
     headRefName,
@@ -148,7 +122,7 @@ export async function listOpenPullRequestsWithHead({
     ]);
 }
 
-/** Get all currently open pull requests from GitHub whose _base_ branch is the given branch. */
+/** Get open pull requests from GitHub with the given base branch. */
 export async function listOpenPullRequestsWithBase({
     cwd,
     baseRefName,
@@ -175,10 +149,7 @@ export async function getCurrentBranchPullRequest(cwd: string, git: Readonly<Sim
         headRefName: currentBranchName,
     });
 
-    /**
-     * `--head` already filters by exact branch name but a fork's pull request can share a head
-     * branch name with one from the current repo, so filter again here to be safe.
-     */
+    /** `--head` is not repo scoped: a fork's PR can use the same branch name. */
     const currentPullRequest: Readonly<PullRequest> | undefined = branchPullRequests.find(
         (pullRequest) => pullRequest.headRefName === currentBranchName,
     );

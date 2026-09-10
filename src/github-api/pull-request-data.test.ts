@@ -29,21 +29,21 @@ function createTestPullRequests(count: number): ReadonlyArray<Readonly<PullReque
 }
 
 describe(escapeShellArgument.name, () => {
-    it('wraps a plain branch name in quotes', () => {
+    it('quotes a plain branch name', () => {
         assert.strictEquals(escapeShellArgument('my-branch'), "'my-branch'");
     });
 
-    it('neutralizes shell expansions that are legal in branch names', () => {
+    it('neutralizes shell syntax', () => {
         assert.strictEquals(escapeShellArgument('a$(b)&c;d|e'), "'a$(b)&c;d|e'");
     });
 
-    it('escapes embedded single quotes', () => {
+    it('escapes single quotes', () => {
         assert.strictEquals(escapeShellArgument("it's"), String.raw`'it'\''s'`);
     });
 });
 
 describe(createPullRequestListCommand.name, () => {
-    it('always sets an explicit limit so that gh does not silently truncate at 30', () => {
+    it('sets an explicit limit', () => {
         assert.isTrue(
             createPullRequestListCommand().includes(`--limit ${maxPullRequestListLength}`),
         );
@@ -63,13 +63,13 @@ describe(createPullRequestListCommand.name, () => {
 });
 
 describe(assertCompletePullRequestList.name, () => {
-    it('accepts a list that did not hit the limit', () => {
+    it('accepts a list under the limit', () => {
         assert.doesNotThrow(() =>
             assertCompletePullRequestList(createTestPullRequests(maxPullRequestListLength - 1)),
         );
     });
 
-    it('rejects a list that hit the limit because it may be truncated', () => {
+    it('rejects a list at the limit', () => {
         assert.throws(() =>
             assertCompletePullRequestList(createTestPullRequests(maxPullRequestListLength)),
         );
@@ -89,7 +89,7 @@ describe(listOpenPullRequests.name, () => {
 });
 
 describe(listOpenPullRequestsWithHead.name, () => {
-    it('only gets pull requests with the given head branch', async () => {
+    it('only gets the given head branch', async () => {
         const testCwd = await loadTestCwd();
 
         if (!testCwd) {
@@ -116,7 +116,7 @@ describe(listOpenPullRequestsWithHead.name, () => {
         );
     });
 
-    it('returns nothing for a branch with no pull request', async () => {
+    it('returns nothing for a branch with no PR', async () => {
         const testCwd = await loadTestCwd();
 
         if (!testCwd) {
@@ -134,7 +134,7 @@ describe(listOpenPullRequestsWithHead.name, () => {
 });
 
 describe(listOpenPullRequestsWithBase.name, () => {
-    it('only gets pull requests with the given base branch', async () => {
+    it('only gets the given base branch', async () => {
         const testCwd = await loadTestCwd();
 
         if (!testCwd) {

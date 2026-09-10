@@ -19,7 +19,6 @@ export async function updateStackedPullRequest({
     remoteName,
     isPostMerge,
 }: {
-    /** The repo directory to use the GitHub CLI from within. */
     cwd: string;
     git: SimpleGit;
     parentPullRequest: Readonly<PullRequest>;
@@ -33,12 +32,7 @@ export async function updateStackedPullRequest({
 }): Promise<number> {
     const originalParentRef = parentPullRequest.headRefOid;
 
-    /**
-     * Query the children directly rather than filtering a list of all open pull requests: the query
-     * is exact no matter how many pull requests the repo has. This must happen _before_ any of the
-     * children get rebased below so that each child's `headRefOid` is still its pre-rebase value
-     * (which is what its own children need to rebase off of).
-     */
+    /** Must run before the rebases below, while each child's `headRefOid` is still pre-rebase. */
     const childPullRequests = await listOpenPullRequestsWithBase({
         cwd,
         baseRefName: parentPullRequest.headRefName,
