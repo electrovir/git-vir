@@ -1,7 +1,7 @@
 import {assert} from '@augment-vir/assert';
 import {shellQuote} from '@augment-vir/common';
 import {describe, it, itCases} from '@augment-vir/test';
-import {loadTestCwd} from '../test-cwd.test-helper.js';
+import {loadTestCwd} from '../test-cwd.mock.js';
 import {createPullRequestListCommand, listPullRequests} from './pull-request-data.js';
 
 const baseCommand =
