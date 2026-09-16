@@ -1,3 +1,4 @@
+import {shellQuote} from '@augment-vir/common';
 import {runShellCommand} from '@augment-vir/node';
 import {defineShape, exactShape, parseJsonWithShape} from 'object-shape-tester';
 import {type SimpleGit} from 'simple-git';
@@ -47,23 +48,47 @@ export async function getPullRequestByNumber(
     return parseJsonWithShape(commandResult.stdout, pullRequestShape);
 }
 
-/** Get all current pull requests from GitHub from the cwd's git repo. */
-export async function listOpenPullRequests(
+/** Explicit `--limit` for `gh pr list`, which otherwise caps its output at 30. */
+export const maxPullRequestListLength = 1000;
+
+/** Build the `gh pr list` command shared by the list functions below. */
+export function createPullRequestListCommand(filterArgs: ReadonlyArray<string> = []): string {
+    return [
+        'gh pr list',
+        '--state open',
+        `--limit ${maxPullRequestListLength}`,
+        `--json ${githubJsonPropertiesToList.join(',')}`,
+        ...filterArgs,
+    ].join(' ');
+}
+
+/**
+ * Get open pull requests from GitHub from the cwd's git repo. Filter args must already be shell
+ * quoted.
+ */
+export async function listPullRequests(
     /** The repo directory to use the GitHub CLI from within. */
     cwd: string,
+    filterArgs: ReadonlyArray<string>,
 ): Promise<ReadonlyArray<Readonly<PullRequest>>> {
-    const commandResult = await runShellCommand(
-        `gh pr list --state open --json ${githubJsonPropertiesToList.join(',')}`,
-        {
-            cwd,
-        },
-    );
+    const commandResult = await runShellCommand(createPullRequestListCommand(filterArgs), {
+        cwd,
+    });
     if (commandResult.error) {
         console.error(commandResult.stderr);
         throw new Error('Failed to list PRs from GitHub.');
     }
 
-    return parseJsonWithShape(commandResult.stdout, pullRequestArrayShape);
+    const pullRequests = parseJsonWithShape(commandResult.stdout, pullRequestArrayShape);
+
+    /** `gh` gives no truncation signal of its own. */
+    if (pullRequests.length >= maxPullRequestListLength) {
+        throw new Error(
+            `Hit the max PR list length (${maxPullRequestListLength}). The PR list may be truncated.`,
+        );
+    }
+
+    return pullRequests;
 }
 
 /** Gets a currently open pull request from GitHub that is using the current git branch. */
@@ -74,15 +99,17 @@ export async function getCurrentBranchPullRequest(cwd: string, git: Readonly<Sim
         throw new Error('You are not currently on a branch.');
     }
 
-    const openPullRequests = await listOpenPullRequests(cwd);
+    const branchPullRequests = await listPullRequests(cwd, [
+        `--head ${shellQuote(currentBranchName)}`,
+    ]);
 
-    const currentPullRequest: Readonly<PullRequest> | undefined = openPullRequests.find(
+    /** `--head` is not repo scoped: a fork's PR can use the same branch name. */
+    const currentPullRequest: Readonly<PullRequest> | undefined = branchPullRequests.find(
         (pullRequest) => pullRequest.headRefName === currentBranchName,
     );
 
     return {
         currentPullRequest,
-        openPullRequests,
         currentBranchName,
     };
 }

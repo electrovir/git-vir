@@ -14,8 +14,7 @@ export async function mergeCommand({
     remoteName,
     otherArgs,
 }: Readonly<CommandInputs>): Promise<void> {
-    const {currentPullRequest, openPullRequests, currentBranchName} =
-        await getCurrentBranchPullRequest(cwd, git);
+    const {currentPullRequest, currentBranchName} = await getCurrentBranchPullRequest(cwd, git);
 
     if (!currentPullRequest) {
         throw new Error(
@@ -34,8 +33,8 @@ export async function mergeCommand({
     log.mutate('Do not run any git commands or modify any files.');
 
     await updateStackedPullRequest({
+        cwd,
         git,
-        pullRequests: openPullRequests,
         parentPullRequest: currentPullRequest,
         remoteName,
         isPostMerge: true,
